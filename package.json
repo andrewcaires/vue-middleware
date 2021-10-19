@@ -1,6 +1,6 @@
 {
   "name": "@andrewcaires/vue-middleware",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "VueJS plugin for middleware",
   "main": "dist/vue-middleware.umd.js",
   "module": "dist/vue-middleware.esm.js",
