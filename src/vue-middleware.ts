@@ -1,9 +1,9 @@
 import { isString, toArray } from '@andrewcaires/utils.js';
-import { PluginObject } from 'vue';
 import VueRouter, { NavigationGuardNext, RawLocation, Route } from 'vue-router';
 
 export interface VueMiddlewareOptions {
   router?: VueRouter;
+  middleware?: string | Array<string>;
   middlewares?: VueMiddlewareList;
 }
 
@@ -25,7 +25,9 @@ const DefaultOptions: VueMiddlewareOptions = {
 
 };
 
-class Middleware {
+let installed = false;
+
+export class VueMiddleware {
 
   private options: VueMiddlewareOptions;
 
@@ -36,7 +38,7 @@ class Middleware {
 
   guard(to: Route, from: Route, next: NavigationGuardNext): void {
 
-    const middlewares = toArray(to.meta?.middleware);
+    const middlewares = this.middlewares(to.meta?.middleware);
 
     if (!middlewares.length) {
 
@@ -59,6 +61,11 @@ class Middleware {
     return this.options.middlewares ? this.options.middlewares[middleware] : undefined;
   }
 
+  private middlewares(middleware: any): Array<string> {
+
+    return [ ...toArray(this.options.middleware), ...toArray(middleware) ];
+  }
+
   private next(navigation: VueMiddlewareNavigation, middlewares: Array<any>, index: number): () => void {
 
     const middleware = this.get(middlewares[index]);
@@ -78,13 +85,8 @@ class Middleware {
 
     this.options.router?.push(location).catch((error) => { });
   }
-}
 
-let installed = false;
-
-export const VueMiddleware: PluginObject<VueMiddlewareOptions> = {
-
-  install(vue: any, options: VueMiddlewareOptions = {}): void {
+  static install(vue: any, options: VueMiddlewareOptions = {}): void {
 
     if (installed) { return; } else { installed = true; }
 
@@ -92,13 +94,13 @@ export const VueMiddleware: PluginObject<VueMiddlewareOptions> = {
 
     if (!router) {
 
-      throw new Error("[vue-middleware] router not defined");
+      throw new Error('[vue-middleware] router not defined');
     }
 
-    const plugin = new Middleware(options);
+    const plugin = new VueMiddleware(options);
 
     router.beforeEach(plugin.guard.bind(plugin));
-  },
-};
+  }
+}
 
 export default VueMiddleware;
